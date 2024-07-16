@@ -13,17 +13,21 @@ import ArgumentParser
     mutating func run() throws  {
         let fm = FileManager()
         let dataPath: String = String("\(fm.homeDirectoryForCurrentUser).gnudodata.json".dropFirst(7))
-        let maxDataFileCreationTries:Int = 3
+        ensureGnudoJsonfile(atPath: dataPath, withMaxAttemps: 3, usingFileManager: fm)
        
-        var fileCreationLoopCount: Int = 0
-        while (!fm.fileExists(atPath: dataPath) && fileCreationLoopCount < maxDataFileCreationTries) {
+    }
+}
+
+func ensureGnudoJsonfile(atPath path: String, withMaxAttemps maxAttempts: Int, usingFileManager fm: FileManager) {
+    var fileCreationLoopCount: Int = 0
+        while (!fm.fileExists(atPath: path) && fileCreationLoopCount < maxAttempts) {
             print("There is no data file at the expected loacation.")
-            print("Creating \(dataPath)...")
+            print("Creating \(path)...")
             fm.createFile(atPath: "",contents: nil)
             fileCreationLoopCount += 1
         }
-        if (!fm.fileExists(atPath: dataPath)) {
-            fatalError("Failed to create \(dataPath) after \(maxDataFileCreationTries) attempts. Aborting execution.")
+        if (!fm.fileExists(atPath: path)) {
+            fatalError("Failed to create \(path) after \(maxAttempts) attempts. Aborting execution.")
         } else { print("Successfully created datafile.")}
-    }
+
 }
