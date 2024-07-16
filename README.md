@@ -12,6 +12,6 @@ Having a to-do list on the command line really allows for a lot of integration w
 🙋 How to Help 🙋
 -----------------
 
-Feel free to add issues (existent ones, hopefully) to the repo, and maybe fix them yourself, or fix some posed by others or even just label some. When you get down to coding you can clone the GitHub repo into a new directory with `git clone https://github.com/thegnugod/gnudo NEW_DIRECTORY_NAME`. Once you've done that, you can build and run the project with `swift run` from anywhere inside `NEW_DIRECTORY_NAME` (including subdirectories), just build it with `swift build -c debug` and then just run it with the generated executable found at `NEW_DIRECTORY_NAME/.build/debug/gnudo`.
+Feel free to add issues (existent ones, hopefully) to the repo, and maybe fix them yourself, or fix some posed by others or even just label some. When you get down to coding you can clone the GitHub repo into a new directory with `git clone https://github.com/thegnugod/gnudo.git NEW_DIRECTORY_NAME`. Once you've done that, you can build and run the project with `swift run` from anywhere inside `NEW_DIRECTORY_NAME` (including subdirectories), just build it with `swift build -c debug` and then just run it with the generated executable found at `NEW_DIRECTORY_NAME/.build/debug/gnudo`.
 
 **Thanks for READING ME, and hopefully helping out with Gnudo!**
