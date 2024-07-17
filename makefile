@@ -1,9 +1,11 @@
 config=debug
+sourcefiles=Sources/Gnudo.swift Sources/ListStructs.swift Package.swift
 
 all: gnudo
 
-gnudo: Sources/Gnudo.swift
+gnudo: $(sourcefiles)
 	swift build -c $(config)
 
 clean:
-	rm gnudo
+	rm -rf .build/debug 
+	rm -rf .build/release
