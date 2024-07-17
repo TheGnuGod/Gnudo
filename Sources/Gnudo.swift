@@ -1,3 +1,10 @@
+//
+// Gnudo.swift
+//
+//
+// Created by Mana Walsh on 2024-07~15
+//
+
 import Foundation
 import ArgumentParser
 
