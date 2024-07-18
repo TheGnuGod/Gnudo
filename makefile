@@ -9,3 +9,7 @@ gnudo: $(sourcefiles)
 clean:
 	rm -rf .build/debug 
 	rm -rf .build/release
+	rm ~/.gnudodata.json
+
+jsonless:
+	rm ~/.gnudodata.json

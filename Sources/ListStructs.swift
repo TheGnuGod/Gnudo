@@ -7,19 +7,33 @@
 
 import Foundation
 
-enum PriorityLevel: Encodable {
+enum PriorityLevel: Encodable, Decodable {
     case Max
     case High
     case Med
     case Low
+    case None
 }
 
-struct Task: Encodable {
+struct Task: Encodable, Decodable, Equatable {
     let name: String
-    let priority: PriorityLevel?
+    let priority: PriorityLevel
+    
+    static func fromString(_ name: String) -> Task {
+        return Task(name: name, priority: .None)
+    }
 }
 
-struct ToDoList: Encodable {
+struct ToDoList: Encodable, Decodable {
     let name: String
     var tasks: [Task]
+    var totalCompleted: Int
+    
+    func listContents() {
+        print("\(self.name):")
+        if (self.tasks == []) { print("Your Gnu-Do list is empty. 🥳Hooray!🥳")}
+        for task in self.tasks {
+            print(task.name)
+        }
+    }
 }
