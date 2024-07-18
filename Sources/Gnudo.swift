@@ -25,14 +25,13 @@ import ArgumentParser
             prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
       
             // Read & Load the data
-            let workingData = try structifier.decode(ToDoList.self, from: fm.contents(atPath: dataPath)!)
+            let workingData = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
         
             // Manipulate the data
             workingData.listContents()
            
             // Write the data
-            let finalData = try jsonifier.encode(workingData)
-            fm.createFile(atPath: dataPath, contents: finalData)
+            saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
         }
     }
     
@@ -53,19 +52,13 @@ import ArgumentParser
             
             
             // Read & Load the data
-            var workingData: ToDoList
-            do {
-                workingData = try structifier.decode(ToDoList.self, from: fm.contents(atPath: dataPath)!)
-            } catch {
-                fatalError("Failed to decode JSON data")
-            }
+            var workingData: ToDoList = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
             
             // Manipulate the data
             workingData.tasks.append(Task.fromString(name))
             
             // Write the data
-            let finalData = try jsonifier.encode(workingData)
-            fm.createFile(atPath: dataPath, contents: finalData)
+            saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
         }
     }
     
@@ -87,25 +80,35 @@ import ArgumentParser
             prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
             
             // Read & Load the data
-            var workingData: ToDoList
-            do {
-                workingData = try structifier.decode(ToDoList.self, from: fm.contents(atPath: dataPath)!)
-            } catch {
-                fatalError("Failed to read JSON data. from \(dataPath)")
-            }
-            
+            var workingData: ToDoList = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
+                        
             // Manipulate the data
             workingData.tasks = []
             
             // Write the data
-            let finalData: Data
-            do {
-                finalData = try jsonifier.encode(workingData)
-            } catch {
-                fatalError("Failed to encode JSON. Any actions performed here will not be saved.")
-            }
-            fm.createFile(atPath: dataPath, contents: finalData)
+            saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
         }
+    }
+}
+
+func loadToDoList(fromJsonAt path: String, usingFileManager fm: FileManager, andDecoder structifer: JSONDecoder) -> ToDoList {
+    
+    do {
+        return try structifer.decode(ToDoList.self, from: fm.contents(atPath: path)!)
+    } catch DecodingError.dataCorrupted {
+        fatalError("The JSON data at \(path) has been corrupted or is otherwise invalid. Aborting execution.")
+    } catch {
+        fatalError("Failed to decode data at \(path). Aborting execution.")
+    }
+}
+
+func saveToDoList(_ input: ToDoList, to path: String, usingFileManager fm: FileManager, andEncoder jsonifier: JSONEncoder) {
+    do {
+         try fm.createFile(atPath: path, contents: jsonifier.encode(input))
+    } catch EncodingError.invalidValue {
+        fatalError("A JSON encoder used to save the data after the performed operation was passed an invalid value. Any actions performed this command will not be saved. Aborting execution.")
+    } catch {
+        fatalError("Failed to encode JSON data to save data after the performed operation. Any actions performed this command will not be saved. Aborting execution.")
     }
 }
 
