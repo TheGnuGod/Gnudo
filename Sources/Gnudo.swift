@@ -11,12 +11,17 @@ import ArgumentParser
 @main struct Gnudo: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "A To-Do list app with a name pertaining to wildebeest.", 
-        version: "v0.0.1",
-        subcommands: [List.self, Add.self, Check.self, Remove.self, Clear.self],
+        version: "v0.1.0",
+        subcommands: [List.self, Add.self, Check.self, Clear.self],
         defaultSubcommand: List.self)
     
     struct List: ParsableCommand {
-        mutating func run() throws  {
+        static var configuration: CommandConfiguration
+        = CommandConfiguration(abstract: "List the tasks in the current Gnu-Do list.")
+       
+        @Flag(name: .customShort("s"), help: "Show extra statistice, like the total amount of tasks checked off from the current list.") var includeExtraStats: Bool = false
+        
+        mutating func run() {
             let fm = FileManager()
             let jsonifier = JSONEncoder()
             let structifier = JSONDecoder()
@@ -28,7 +33,7 @@ import ArgumentParser
             let workingData = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
         
             // Manipulate the data
-            workingData.listContents()
+            workingData.listContents(withExtraStats: includeExtraStats)
            
             // Write the data
             saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
@@ -42,7 +47,7 @@ import ArgumentParser
         
         @Argument var name: String
         
-        mutating func run() throws {
+        mutating func run() {
             let fm = FileManager()
             let jsonifier = JSONEncoder()
             let structifier = JSONDecoder()
@@ -55,7 +60,11 @@ import ArgumentParser
             var workingData: ToDoList = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
             
             // Manipulate the data
-            workingData.tasks.append(Task.fromString(name))
+            if (!workingData.tasks.contains(Task.fromString(name))) {
+                workingData.tasks.append(Task.fromString(name))
+            } else {
+                print("There is already a task with that name on the list. Did not modify data"); return
+            }
             
             // Write the data
             saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
@@ -63,14 +72,45 @@ import ArgumentParser
     }
     
     struct Check: ParsableCommand {
+        static var configuration: CommandConfiguration
+        = CommandConfiguration(abstract: "Check off a task from the current Gnu-Do list.")
         
+        @Argument(help: "The name of the task to remove") var nameToRemove: String
+        @Flag(name: .customShort("n"), help: "Do not increment the task counter when removing tasks with this flag.") var leaveNoTrace: Bool = false
+        
+        mutating func run() {
+            let fm = FileManager()
+            let jsonifier = JSONEncoder()
+            let structifier = JSONDecoder()
+            jsonifier.outputFormatting = .prettyPrinted
+            let dataPath: String = String("\(fm.homeDirectoryForCurrentUser).gnudodata.json".dropFirst(7))
+            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
+      
+            // Read & Load the data
+            var workingData = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
+        
+            // Manipulate the data
+            var i: Int = 0
+            for task in workingData.tasks {
+                if (task.name == nameToRemove) {
+                    workingData.tasks.remove(at: i)
+                    workingData.totalCompleted += leaveNoTrace ? 0 : 1
+                    continue
+                }
+                i += 1;
+            }
+            
+            // Write the data
+            saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
+        }
     }
     
-    struct Remove: ParsableCommand {
-        
-    }
-
     struct Clear: ParsableCommand {
+        static var configuration: CommandConfiguration
+        = CommandConfiguration(abstract: "Remove every element from the current list, with no trace.")
+        
+        @Flag(name: .customShort("i"), help: "When enabled, increment the completed task counter for each task in the ist.") var incrementTaskCounter: Bool = false
+        
         mutating func run() {
             let fm = FileManager()
             let jsonifier = JSONEncoder()
@@ -83,6 +123,7 @@ import ArgumentParser
             var workingData: ToDoList = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
                         
             // Manipulate the data
+            workingData.totalCompleted += incrementTaskCounter ? workingData.tasks.count : 0
             workingData.tasks = []
             
             // Write the data
