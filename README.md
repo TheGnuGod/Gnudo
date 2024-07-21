@@ -18,4 +18,4 @@ Feel free to add issues (existent ones, hopefully) to the repo, and maybe fix th
 
 **Thanks for READINGME, and hopefully helping out with Gnudo!**
 
-(Also, when I say "we" I mean "I", and when you see "us" read "me". It just sounds better this way)
+(Also, when I say "we" I mean "I", and when you see "us" read "me". It just sounds better this way.)
