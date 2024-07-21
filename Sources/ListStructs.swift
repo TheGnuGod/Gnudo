@@ -5,8 +5,6 @@
 //  Created by Mana Walsh on 2024-07-15
 //
 
-import Foundation
-
 enum PriorityLevel: Encodable, Decodable {
     case Max
     case High
@@ -29,11 +27,14 @@ struct ToDoList: Encodable, Decodable {
     var tasks: [Task]
     var totalCompleted: Int
     
-    func listContents() {
+    func listContents(withExtraStats shouldPrintStats: Bool) {
         print("\(self.name):")
         if (self.tasks == []) { print("Your Gnu-Do list is empty. 🥳Hooray!🥳")}
         for task in self.tasks {
             print(task.name)
+        }
+        if (shouldPrintStats) {
+            print("Tasks completed from \(self.name): \t\(self.totalCompleted)")
         }
     }
 }
