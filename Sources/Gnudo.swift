@@ -25,7 +25,7 @@ import ArgumentParser
 @main struct Gnudo: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "A To-Do list app with a name pertaining to wildebeest.", 
-        version: "v0.1.0",
+        version: "v0.2.0",
         subcommands: [List.self, Add.self, Check.self, Clear.self],
         defaultSubcommand: List.self)
     
@@ -41,7 +41,7 @@ import ArgumentParser
             let structifier = JSONDecoder()
             jsonifier.outputFormatting = .prettyPrinted
             let dataPath: String = String("\(fm.homeDirectoryForCurrentUser).gnudodata.json".dropFirst(7))
-            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
+            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: []))
       
             // Read & Load the data
             let workingData = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
@@ -59,26 +59,27 @@ import ArgumentParser
         static var configuration: CommandConfiguration
         = CommandConfiguration(abstract: "Add a new element to the list.")
         
-        @Argument var name: String
+        @Argument(help: "The name of the task to add.") var name: String
+        @Argument(help: "The priority level of the task to add. Use max, high, med, low or leave blank for none.") var priorityLevelName: String = ""
         
         mutating func run() {
+            let priorityToSet = priorityLevelName.representedPriorityLevel()
             let fm = FileManager()
             let jsonifier = JSONEncoder()
             let structifier = JSONDecoder()
             jsonifier.outputFormatting = .prettyPrinted
             let dataPath: String = String("\(fm.homeDirectoryForCurrentUser).gnudodata.json".dropFirst(7))
-            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
+            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: []))
             
             
             // Read & Load the data
             var workingData: ToDoList = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
             
             // Manipulate the data
-            if (!workingData.tasks.contains(Task.fromString(name))) {
-                workingData.tasks.append(Task.fromString(name))
-            } else {
-                print("There is already a task with that name on the list. Did not modify data"); return
+            if (workingData.tasks.hasTaskWithName(name)) {
+                print("There is already a task with that name on the list. Did not modify data."); return
             }
+            workingData.tasks.append(Task(name: name, priority: priorityToSet))
             
             // Write the data
             saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
@@ -98,21 +99,13 @@ import ArgumentParser
             let structifier = JSONDecoder()
             jsonifier.outputFormatting = .prettyPrinted
             let dataPath: String = String("\(fm.homeDirectoryForCurrentUser).gnudodata.json".dropFirst(7))
-            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
+            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: []))
       
             // Read & Load the data
             var workingData = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
         
             // Manipulate the data
-            var i: Int = 0
-            for task in workingData.tasks {
-                if (task.name == nameToRemove) {
-                    workingData.tasks.remove(at: i)
-                    workingData.totalCompleted += leaveNoTrace ? 0 : 1
-                    continue
-                }
-                i += 1;
-            }
+            workingData.checkOff(nameToRemove, shouldIncrementTaskCounter: !leaveNoTrace)
             
             // Write the data
             saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
@@ -123,7 +116,7 @@ import ArgumentParser
         static var configuration: CommandConfiguration
         = CommandConfiguration(abstract: "Remove every element from the current list, with no trace.")
         
-        @Flag(name: .customShort("i"), help: "When enabled, increment the completed task counter for each task in the ist.") var incrementTaskCounter: Bool = false
+        @Flag(name: .customShort("i"), help: "When enabled, increment the completed task counter for each task in the ist.") var shouldIncrementTaskStats: Bool = false
         
         mutating func run() {
             let fm = FileManager()
@@ -131,15 +124,19 @@ import ArgumentParser
             let structifier = JSONDecoder()
             jsonifier.outputFormatting = .prettyPrinted
             let dataPath: String = String("\(fm.homeDirectoryForCurrentUser).gnudodata.json".dropFirst(7))
-            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: [], totalCompleted: 0))
+            prepGnudoJson(atPath: dataPath, usingFileManager: fm, encoder: jsonifier, andDefaultList: ToDoList(name: "The Gnudo List", tasks: []))
             
             // Read & Load the data
             var workingData: ToDoList = loadToDoList(fromJsonAt: dataPath, usingFileManager: fm, andDecoder: structifier)
                         
             // Manipulate the data
-            workingData.totalCompleted += incrementTaskCounter ? workingData.tasks.count : 0
-            workingData.tasks = []
-            
+            if (!shouldIncrementTaskStats) {
+                workingData.tasks = []
+            }
+            for task in workingData.tasks {
+                workingData.checkOff(task.name, shouldIncrementTaskCounter: true)
+            }
+                        
             // Write the data
             saveToDoList(workingData, to: dataPath, usingFileManager: fm, andEncoder: jsonifier)
         }
