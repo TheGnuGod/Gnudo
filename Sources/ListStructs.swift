@@ -19,36 +19,151 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-enum PriorityLevel: Encodable, Decodable {
-    case Max
-    case High
-    case Med
-    case Low
-    case None
+extension String {
+    func representedPriorityLevel() -> Task.PriorityLevel {
+        switch self.uppercased() {
+        case "MAX":
+            return .Max
+        case "HIGH":
+            return .High
+        case "MED":
+            return .Medium
+        case "LOW":
+            return .Low
+        case "":
+            return .None
+        case "NONE":
+            return .None
+        default:
+            print("Failed to interpret priority level.")
+            exit(1)
+        }
+    }
+}
+
+enum enumCaseRepresentation {
+    case Abbrev
+    case FullName
+    case Emoji
 }
 
 struct Task: Encodable, Decodable, Equatable {
+    enum PriorityLevel: Encodable, Decodable, Hashable {
+        case Max
+        case High
+        case Medium
+        case Low
+        case None
+        
+        func representation(inFormat format: enumCaseRepresentation) -> String {
+            switch format {
+            case .Emoji:
+                switch self {
+                case .Max:
+                    return "🟥"
+                case .High:
+                    return "🟧"
+                case .Medium:
+                    return "🟨"
+                case .Low:
+                    return "🟩"
+                case .None:
+                    return "⬜️"
+                }
+            case .Abbrev:
+                switch self {
+                case .Max:
+                    return "Max"
+                case .High:
+                    return "High"
+                case .Medium:
+                    return "Med"
+                case .Low:
+                    return "Low"
+                case .None:
+                    return "Unprioritised"
+                }
+            case .FullName:
+                switch self {
+                case .Max:
+                    return "Maximum"
+                case .High:
+                    return "High"
+                case .Medium:
+                    return "Medium"
+                case .Low:
+                    return "Low"
+                case .None:
+                    return "None"
+                }
+            }
+            
+        }
+        
+        static let arrayOfAllCases: [Self] = [.Max,.High,.Medium,.Low,.None]
+    }
+    
     let name: String
     let priority: PriorityLevel
-    
-    static func fromString(_ name: String) -> Task {
-        return Task(name: name, priority: .None)
-    }
 }
 
 struct ToDoList: Encodable, Decodable {
     let name: String
     var tasks: [Task]
-    var totalCompleted: Int
+    
+    var taskCompletionStats: [Task.PriorityLevel:Int] =
+        [.Max:0,
+         .High:0,
+         .Medium:0,
+         .Low:0,
+         .None:0]
+    
+    mutating func checkOff(_ name: String, shouldIncrementTaskCounter incrementing: Bool) {
+        var i: Int = 0
+        for task in self.tasks {
+            if (task.name == name) {
+                self.tasks.remove(at: i)
+                if (!incrementing) { break }
+                self.taskCompletionStats[task.priority]! += 1
+            }
+            i += 1;
+        }
+    }
     
     func listContents(withExtraStats shouldPrintStats: Bool) {
         print("\(self.name):")
         if (self.tasks == []) { print("Your Gnu-Do list is empty. 🥳Hooray!🥳")}
         for task in self.tasks {
+            print(task.priority.representation(inFormat: .Emoji), terminator: "")
             print(task.name)
         }
         if (shouldPrintStats) {
-            print("Tasks completed from \(self.name): \t\(self.totalCompleted)")
+            print("\nTask Completion Statistics:")
+            for priorityLevel in Task.PriorityLevel.arrayOfAllCases {
+                print("\(priorityLevel.representation(inFormat: .Emoji))\(taskCompletionStats[priorityLevel]!) \(priorityLevel.representation(inFormat: .FullName)) \t priority task(s)")
+            }
+            let totalCompleted: Int = {
+                var runningTotal: Int = 0
+                for priorityLevel in Task.PriorityLevel.arrayOfAllCases {
+                    runningTotal += taskCompletionStats[priorityLevel]!
+                }
+                return runningTotal
+            }()
+            print("\n👏 In total that's ✨\(totalCompleted)✨ tasks! 👏")
         }
+    }
+    
+    
+}
+
+extension [Task] {
+    func hasTaskWithName(_ name: String) -> Bool{
+        for task in self {
+            if (task.name == name) {
+                return true
+            }
+        }
+        
+        return false
     }
 }
