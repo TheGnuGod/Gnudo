@@ -1,7 +1,7 @@
 🛰️ Overview 🛰️
 --------------
 
-Gnudo is a wildly unfinished To-Do list app accessible on the terminal with a name pertaining to wildebeest.
+Gnudo is a To-Do list app accessible on the terminal with a name pertaining to wildebeest.
 
 It's written in 🐦‍🔥[Swift](swift.org)🐦‍🔥 with its ArgumentParser, stores the task data in json, and will automatically back it up somewhere else on disk.
 
