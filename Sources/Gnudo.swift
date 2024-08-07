@@ -33,7 +33,7 @@ import ArgumentParser
         static var configuration: CommandConfiguration
         = CommandConfiguration(abstract: "List the tasks in the current Gnu-Do list.")
        
-        @Flag(name: .customShort("s"), help: "Show extra statistice, like the total amount of tasks checked off from the current list.") var includeExtraStats: Bool = false
+        @Flag(name: .customShort("s"), help: "Show extra statistics, like the total amount of tasks checked off from the current list.") var includeExtraStats: Bool = false
         
         mutating func run() {
             let fm = FileManager()
@@ -116,7 +116,7 @@ import ArgumentParser
         static var configuration: CommandConfiguration
         = CommandConfiguration(abstract: "Remove every element from the current list, with no trace.")
         
-        @Flag(name: .customShort("i"), help: "When enabled, increment the completed task counter for each task in the ist.") var shouldIncrementTaskStats: Bool = false
+        @Flag(name: .customShort("i"), help: "When enabled, increment the completed task counter for each task in the list.") var shouldIncrementTaskStats: Bool = false
         
         mutating func run() {
             let fm = FileManager()
